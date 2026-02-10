@@ -147,8 +147,6 @@ export default function ChatPage() {
             });
         },
         (error) => {
-          // Ignore abort errors
-          if (error === "The operation was aborted." || error === "AbortError") return;
           console.error("Stream error:", error);
           setStreamingContent("");
           setIsStreaming(false);

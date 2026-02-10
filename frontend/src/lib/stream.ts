@@ -79,6 +79,7 @@ export async function streamChat(
       }
     }
   } catch (err) {
+    if (signal?.aborted) return;
     onError(err instanceof Error ? err.message : 'Stream failed');
   }
 }
