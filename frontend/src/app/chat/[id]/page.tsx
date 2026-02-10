@@ -41,7 +41,7 @@ export default function ChatPage() {
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (container) {
-      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      container.scrollTo({ top: container.scrollHeight, behavior: "instant" });
     }
   }, [messages]);
 
@@ -69,15 +69,16 @@ export default function ChatPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load chat messages
+  // Load chat messages (skip for fresh chats with ?q= to avoid wiping optimistic message)
   useEffect(() => {
     if (!chatId) return;
+    if (searchParams.get("q")) return;
     getChat(chatId)
       .then((chat) => {
         setMessages(chat.messages || []);
       })
       .catch((err) => console.error("Failed to load chat:", err));
-  }, [chatId]);
+  }, [chatId, searchParams]);
 
   const sendMessage = useCallback(
     (message: string) => {
@@ -166,10 +167,10 @@ export default function ChatPage() {
     const q = searchParams.get("q");
     if (q && chatId) {
       initialSendDone.current = true;
-      // Small delay to ensure chat is loaded
-      setTimeout(() => sendMessage(q), 300);
+      sendMessage(q);
+      router.replace(`/chat/${chatId}`, { scroll: false });
     }
-  }, [chatId, searchParams, sendMessage]);
+  }, [chatId, searchParams, sendMessage, router]);
 
   const handleFeedback = async (messageId: string, feedback: "like" | "dislike") => {
     try {
