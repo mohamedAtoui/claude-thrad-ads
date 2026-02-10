@@ -88,7 +88,7 @@ export default function ChatPage() {
             };
             setMessages((msgs) => {
               const updated = [...msgs, assistantMsg];
-              // Fetch ad from Thrad (client-side, browser sends Origin automatically)
+              // Fetch ad from backend (server-to-server Thrad call)
               const allMessages = updated.map((m) => ({ role: m.role, content: m.content }));
               fetchThradAd(allMessages, chatId).then((ad) => {
                 if (ad && messageId) {
@@ -218,7 +218,7 @@ export default function ChatPage() {
         <div className="sticky bottom-0 flex flex-col items-center px-0 md:px-2 pb-0 flex-shrink-0 w-full">
           <ChatInput onSend={sendMessage} disabled={isStreaming} showFooter={false} />
           <p className="text-[11px] -mt-[20px] pt-[28px] pb-2 w-full text-center" style={{ color: 'var(--color-text-footer)', background: 'var(--color-bg-primary)' }}>
-            Claude with Ads can make mistakes, after all, it&apos;s tomfoolery from Thrad.
+            Claude with Thrad can make mistakes, after all, it&apos;s tomfoolery from Thrad.
           </p>
         </div>
       </main>

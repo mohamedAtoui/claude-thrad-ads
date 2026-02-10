@@ -83,7 +83,7 @@ export default function HomePage() {
             className="text-[40px] text-[var(--color-text-primary)]"
             style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 400 }}
           >
-            Claude with Ads
+            Claude with Thrad
           </h1>
         </div>
 
