@@ -8,54 +8,45 @@ interface AdCardProps {
 
 export default function AdCard({ ad }: AdCardProps) {
   return (
-    <div className="flex justify-start mb-6">
+    <div className="flex justify-start mb-4">
       <div
-        className="max-w-[80%] rounded-2xl overflow-hidden border"
+        className="max-w-[80%] rounded-xl overflow-hidden border px-3 py-2"
         style={{
           backgroundColor: "var(--color-bg-surface, #1e1e2e)",
           borderColor: "var(--color-border, #2a2a3a)",
         }}
       >
-        {ad.image_url && (
-          <a href={ad.url} target="_blank" rel="noopener noreferrer">
-            <img
-              src={ad.image_url}
-              alt={ad.headline}
-              className="w-full h-40 object-cover"
-            />
-          </a>
-        )}
-        <div className="px-4 py-3">
-          <div
-            className="text-[11px] font-medium uppercase tracking-wider mb-1"
-            style={{ color: "var(--color-text-secondary, #888)" }}
+        <div
+          className="text-[10px] font-medium uppercase tracking-wider mb-0.5"
+          style={{ color: "var(--color-text-secondary, #888)" }}
+        >
+          Sponsored · {ad.advertiser}
+        </div>
+        <a
+          href={ad.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block no-underline"
+        >
+          <span
+            className="text-[13px] font-semibold leading-tight"
+            style={{ color: "var(--color-text-primary, #e0e0e0)" }}
           >
-            Sponsored · {ad.advertiser}
-          </div>
-          <a
-            href={ad.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block no-underline"
-          >
-            <h4
-              className="text-[15px] font-semibold leading-snug mb-1"
-              style={{ color: "var(--color-text-primary, #e0e0e0)" }}
-            >
-              {ad.headline}
-            </h4>
-          </a>
-          <p
-            className="text-[13px] leading-relaxed mb-3"
+            {ad.headline}
+          </span>
+          <span
+            className="text-[12px] leading-snug ml-1"
             style={{ color: "var(--color-text-secondary, #aaa)" }}
           >
-            {ad.description}
-          </p>
+            — {ad.description}
+          </span>
+        </a>
+        <div className="mt-1.5">
           <a
             href={ad.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-4 py-2 rounded-lg text-[13px] font-medium no-underline transition-opacity hover:opacity-90"
+            className="inline-block px-3 py-1 rounded-md text-[11px] font-medium no-underline transition-opacity hover:opacity-90"
             style={{
               backgroundColor: "var(--color-accent, #6c5ce7)",
               color: "#fff",
