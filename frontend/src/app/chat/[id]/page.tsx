@@ -39,7 +39,10 @@ export default function ChatPage() {
 
   // Smooth scroll when new messages are added
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
   }, [messages]);
 
   // Instant scroll during streaming, only if user is near bottom
@@ -49,7 +52,7 @@ export default function ChatPage() {
     if (!container) return;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
     if (nearBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      container.scrollTop = container.scrollHeight;
     }
   }, [streamingContent]);
 

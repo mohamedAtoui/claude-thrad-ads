@@ -41,7 +41,7 @@ export default function ChatMessage({
   if (role === "user") {
     return (
       <div className="flex justify-end mb-6">
-        <div className="max-w-[80%] bg-[var(--color-bg-user-bubble)] text-[var(--color-text-user)] rounded-[20px] px-4 py-3 text-[15px] leading-[1.6]" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
+        <div className="max-w-[80%] bg-[var(--color-bg-user-bubble)] text-[var(--color-text-user)] rounded-[20px] px-4 py-3 text-[15px] leading-[1.6] cursor-default" style={{ fontFamily: "var(--font-inter), sans-serif" }}>
           {content}
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function ChatMessage({
     <div className="flex justify-start mb-6">
       <div className="max-w-[80%]">
         <div
-          className="assistant-content text-[var(--color-text-primary)] text-[15px] leading-[1.6]"
+          className="assistant-content text-[var(--color-text-primary)] text-[15px] leading-[1.6] cursor-default"
           style={{ fontFamily: "var(--font-inter), sans-serif" }}
           dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
         />
