@@ -13,7 +13,7 @@ export async function streamChat(
   chatId: string,
   message: string,
   onChunk: (text: string) => void,
-  onDone: (messageId: string, ad: AdData | null) => void,
+  onDone: (messageId: string) => void,
   onError: (error: string) => void,
 ) {
   const token = getToken();
@@ -65,7 +65,7 @@ export async function streamChat(
             return;
           }
           if (data.done) {
-            onDone(data.message_id || '', data.ad || null);
+            onDone(data.message_id || '');
             return;
           }
           if (data.chunk) {

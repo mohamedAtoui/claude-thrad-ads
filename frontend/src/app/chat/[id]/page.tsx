@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getChat, sendFeedback } from "@/lib/api";
 import { streamChat, AdData } from "@/lib/stream";
+import { fetchThradAd } from "@/lib/thrad";
 import Sidebar from "@/components/Sidebar";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
@@ -77,19 +78,27 @@ export default function ChatPage() {
         (chunk) => {
           setStreamingContent((prev) => prev + chunk);
         },
-        (messageId, ad) => {
+        (messageId) => {
           setStreamingContent((prev) => {
+            const finalContent = prev;
             const assistantMsg: Message = {
               id: messageId,
               role: "assistant",
-              content: prev,
+              content: finalContent,
             };
-            setMessages((msgs) => [...msgs, assistantMsg]);
+            setMessages((msgs) => {
+              const updated = [...msgs, assistantMsg];
+              // Fetch ad from Thrad (client-side, browser sends Origin automatically)
+              const allMessages = updated.map((m) => ({ role: m.role, content: m.content }));
+              fetchThradAd(allMessages, chatId).then((ad) => {
+                if (ad && messageId) {
+                  setAds((prev) => ({ ...prev, [messageId]: ad }));
+                }
+              });
+              return updated;
+            });
             return "";
           });
-          if (ad && messageId) {
-            setAds((prev) => ({ ...prev, [messageId]: ad }));
-          }
           setIsStreaming(false);
           // Reload chat to get correct message IDs
           getChat(chatId).then((chat) => setMessages(chat.messages || []));

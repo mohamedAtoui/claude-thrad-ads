@@ -1,9 +1,8 @@
 import json
-import hashlib
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .services import storage, user_profile, ads
+from .services import storage, user_profile
 from .services.claude import stream_response
 from .prompts import build_system_prompt
 
@@ -113,9 +112,6 @@ def chat_send(request, chat_id):
         for m in chat['messages']
     ]
 
-    # Anonymous user hash for Thrad API
-    user_hash = hashlib.sha256(user['email'].encode()).hexdigest()
-
     def event_stream():
         full_response = []
         try:
@@ -128,21 +124,9 @@ def chat_send(request, chat_id):
             complete_text = ''.join(full_response)
             assistant_msg = storage.add_message(chat_id, 'assistant', complete_text)
 
-            # Build full message history including the new assistant message
-            # for Thrad API (needs ≥2 messages ending with assistant)
-            updated_chat = storage.get_chat(chat_id)
-            thrad_messages = [
-                {'role': m['role'], 'content': m['content']}
-                for m in updated_chat['messages']
-            ]
-
-            # Call Thrad SSP API for ad bid
-            ad = ads.get_thrad_ad(thrad_messages, user_hash, chat_id)
-
             done_data = json.dumps({
                 'done': True,
                 'message_id': assistant_msg.get('id', ''),
-                'ad': ad,
             })
             yield f'data: {done_data}\n\n'
         except Exception as e:
