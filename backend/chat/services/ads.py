@@ -1,63 +1,113 @@
+import hashlib
+import logging
+import random
+
 import requests
 from datetime import datetime, timezone
 from django.conf import settings
 
+logger = logging.getLogger(__name__)
 
-def get_thrad_ad(messages: list, user_id: str, chat_id: str) -> dict | None:
+MOCK_ADS = [
+    {
+        'advertiser': 'Nike',
+        'headline': 'Just Do It - New Collection',
+        'description': 'Discover the latest Nike running shoes designed for every level. Free shipping on orders over $50.',
+        'cta_text': 'Shop Now',
+        'url': 'https://www.nike.com',
+    },
+    {
+        'advertiser': 'Notion',
+        'headline': 'Your All-in-One Workspace',
+        'description': "Write, plan, and organize in one place. Trusted by teams at the world's best companies.",
+        'cta_text': 'Try Free',
+        'url': 'https://www.notion.so',
+    },
+    {
+        'advertiser': 'Vercel',
+        'headline': 'Deploy Instantly',
+        'description': 'The platform for frontend developers. Build and deploy your next project in seconds.',
+        'cta_text': 'Start Building',
+        'url': 'https://vercel.com',
+    },
+    {
+        'advertiser': 'Linear',
+        'headline': 'Issue Tracking, Streamlined',
+        'description': 'The tool for modern software teams. Plan, track, and ship world-class products.',
+        'cta_text': 'Get Started',
+        'url': 'https://linear.app',
+    },
+]
+
+
+def _call_thrad_api(api_key: str, payload: dict) -> dict | None:
+    """Make a single Thrad SSP bid request with the given API key.
+
+    Returns the bid dict on success, or None on failure.
     """
-    Call the Thrad SSP API to get a real-time ad bid.
+    headers = {
+        'thrad-api-key': api_key,
+        'Content-Type': 'application/json',
+    }
+    # No Origin header — server-to-server call avoids the 403
+    resp = requests.post(
+        'https://ssp.thrads.ai/api/v1/ssp/bid-request',
+        headers=headers,
+        json=payload,
+        timeout=6,
+    )
+    logger.info('Thrad API [key=…%s] status=%s body=%s', api_key[-6:], resp.status_code, resp.text[:500])
+    resp.raise_for_status()
 
-    Args:
-        messages: List of dicts with 'role' and 'content' keys (must have ≥2,
-                  alternating user/assistant, ending with assistant).
-        user_id: Anonymous user identifier (UUID or hash).
-        chat_id: The chat/session identifier.
+    data = resp.json().get('data', {})
+    return data.get('bid')
 
-    Returns:
-        The bid dict (advertiser, headline, description, cta_text, url, image_url)
-        on success, or None on error / no bid.
+
+def get_thrad_ad(messages: list, user_id: str, chat_id: str, turn_number: int = 0) -> dict | None:
     """
-    try:
-        # Build Thrad-format messages with timestamps
-        now = datetime.now(timezone.utc).isoformat()
-        thrad_messages = [
-            {
-                'role': m['role'],
-                'content': m['content'],
-                'timestamp': now,
-            }
-            for m in messages
-        ]
+    Call the Thrad SSP API to get a real-time ad bid (server-to-server).
 
-        payload = {
-            'userId': user_id,
-            'chatId': chat_id,
-            'messages': thrad_messages,
-            'production': False,  # Sandbox mode — always returns ads
+    Tries the primary API key first, then the fallback key.
+    If both fail, returns a random mock ad so the UI never breaks.
+    """
+    # Thrad requires minimum 2 messages (user + assistant, alternating)
+    if len(messages) < 2:
+        logger.info('Skipping Thrad API: only %d message(s)', len(messages))
+        return random.choice(MOCK_ADS)
+
+    # Anonymize user_id — Thrad docs say "never use PII"
+    anon_id = 'user_' + hashlib.sha256(user_id.encode()).hexdigest()[:16]
+
+    now = datetime.now(timezone.utc).isoformat()
+    thrad_messages = [
+        {
+            'role': m['role'],
+            'content': m['content'],
+            'timestamp': now,
         }
+        for m in messages
+    ]
 
-        headers = {
-            'thrad-api-key': settings.THRAD_API_KEY,
-            'Content-Type': 'application/json',
-        }
-        if settings.THRAD_CHATBOT_URL:
-            headers['Origin'] = settings.THRAD_CHATBOT_URL
+    payload = {
+        'userId': anon_id,
+        'chatId': chat_id,
+        'messages': thrad_messages,
+        'production': False,
+        'turn_number': turn_number,
+        'adtype': '',
+    }
 
-        resp = requests.post(
-            'https://ssp.thrads.ai/api/v1/ssp/bid-request',
-            headers=headers,
-            json=payload,
-            timeout=6,
-        )
-        resp.raise_for_status()
+    # Try primary key, then fallback key
+    for key in [settings.THRAD_API_KEY, settings.THRAD_API_KEY_FALLBACK]:
+        if not key:
+            continue
+        try:
+            bid = _call_thrad_api(key, payload)
+            if bid:
+                return bid
+        except Exception:
+            logger.exception('Thrad API call failed for key …%s', key[-6:])
 
-        data = resp.json().get('data', {})
-        bid = data.get('bid')
-        if not bid:
-            return None
-
-        return bid
-
-    except Exception:
-        # Ad failure must never break the chat
-        return None
+    # Both keys failed or returned no bid — return mock ad
+    logger.warning('All Thrad API keys failed; returning mock ad')
+    return random.choice(MOCK_ADS)

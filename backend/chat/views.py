@@ -3,6 +3,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from .services import storage, user_profile
+from .services.ads import get_thrad_ad
 from .services.claude import stream_response
 from .prompts import build_system_prompt
 
@@ -164,3 +165,28 @@ def chat_feedback(request, chat_id):
 
     storage.update_message_feedback(chat_id, message_id, feedback)
     return JsonResponse({'status': 'ok'})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def chat_ads(request, chat_id):
+    user = _get_auth_user(request)
+    if not user:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    chat = storage.get_chat(chat_id)
+    if not chat:
+        return JsonResponse({'error': 'Chat not found'}, status=404)
+    if chat['user_email'] != user['email']:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    body = _json_body(request)
+    turn_number = body.get('turn_number', 0)
+
+    messages = [
+        {'role': m['role'], 'content': m['content']}
+        for m in chat.get('messages', [])
+    ]
+
+    ad = get_thrad_ad(messages, user['email'], chat_id, turn_number=turn_number)
+    return JsonResponse({'ad': ad})

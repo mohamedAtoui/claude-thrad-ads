@@ -193,7 +193,7 @@ export default function LoginPage() {
         <div className="mx-auto grid max-w-[90rem] flex-1 gap-10 lg:grid-cols-2" style={{ width: "calc(100% - 2 * clamp(2rem, calc(1.43rem + 2.86vw), 4rem))" }}>
           {/* Left side - heading + login */}
           <div className="flex flex-col items-center justify-center">
-            <h2 className="text-center text-[#E8DDD3] font-serif mt-12 text-[1.75rem] min-[350px]:text-[3.2rem] min-[500px]:text-[3.5rem] select-none" style={{ fontFeatureSettings: "'liga' 1" }}>
+            <h2 className="text-center text-[#E8DDD3] mt-12 text-[1.75rem] min-[350px]:text-[3.2rem] min-[500px]:text-[3.5rem] select-none" style={{ fontFamily: "'Times New Roman', Times, serif", fontFeatureSettings: "'liga' 1" }}>
               The AI for
               <br />
               problem solvers

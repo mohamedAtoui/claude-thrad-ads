@@ -87,4 +87,5 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
 # Thrad SSP
 THRAD_API_KEY = os.getenv('THRAD_API_KEY', '')
+THRAD_API_KEY_FALLBACK = os.getenv('THRAD_API_KEY_FALLBACK', '')
 THRAD_CHATBOT_URL = os.getenv('THRAD_CHATBOT_URL', '')
