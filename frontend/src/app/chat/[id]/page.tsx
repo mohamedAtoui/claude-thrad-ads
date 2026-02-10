@@ -175,8 +175,8 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 flex flex-col items-center px-2 md:px-4 pt-14 pb-0 overflow-y-scroll" style={{ overscrollBehavior: 'contain' }}>
           <div className="w-full max-w-3xl px-1 md:px-6 flex-1">
-            {messages.map((msg) => (
-              <div key={msg.id}>
+            {messages.map((msg, idx) => (
+              <div key={`${msg.id}-${idx}`}>
                 <ChatMessage
                   id={msg.id}
                   role={msg.role}
