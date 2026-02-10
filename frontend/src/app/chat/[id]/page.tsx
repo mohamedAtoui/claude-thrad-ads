@@ -69,15 +69,17 @@ export default function ChatPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load chat messages (skip for fresh chats with ?q= to avoid wiping optimistic message)
+  // Load chat messages (skip while streaming — onDone reloads after stream completes)
   useEffect(() => {
     if (!chatId) return;
     if (searchParams.get("q")) return;
+    if (isStreaming) return;
     getChat(chatId)
       .then((chat) => {
         setMessages(chat.messages || []);
       })
       .catch((err) => console.error("Failed to load chat:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, searchParams]);
 
   const sendMessage = useCallback(
