@@ -9,26 +9,9 @@ import { ChevronDown } from "lucide-react"
 /* ── ClaudeLogo (from login-page-box/components/navbar.tsx) ── */
 function ClaudeLogo() {
   return (
-    <div className="flex items-center gap-2">
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <circle cx="14" cy="14" r="3" fill="#D97757" />
-        <line x1="14" y1="2" x2="14" y2="8" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="14" y1="20" x2="14" y2="26" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="2" y1="14" x2="8" y2="14" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="20" y1="14" x2="26" y2="14" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="5.5" y1="5.5" x2="9.7" y2="9.7" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="18.3" y1="18.3" x2="22.5" y2="22.5" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="5.5" y1="22.5" x2="9.7" y2="18.3" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="18.3" y1="9.7" x2="22.5" y2="5.5" stroke="#D97757" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-      <span className="text-[#E8DDD3] text-xl font-medium tracking-tight">Claude</span>
+    <div className="flex items-center -space-x-1">
+      <img src="/claude-thrad-logo.svg" alt="Thrad" width={52} height={52} className="-mr-1 -mt-1" />
+      <span className="text-white text-3xl tracking-tight" style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 400 }}>Claude</span>
     </div>
   )
 }
@@ -69,7 +52,7 @@ function Navbar() {
 
         <button
           type="button"
-          className="ml-1 rounded-full border border-[#4A4039] bg-transparent px-5 py-2 text-sm font-medium text-[#E8DDD3] transition-colors hover:bg-[#2A2520]"
+          className="ml-1 rounded-xl bg-white px-5 py-2 text-sm font-medium text-[#1A1714] transition-colors hover:bg-[#E8DDD3]"
         >
           Try Claude
         </button>
@@ -193,7 +176,7 @@ export default function LoginPage() {
         <div className="mx-auto grid max-w-[90rem] flex-1 gap-10 lg:grid-cols-2" style={{ width: "calc(100% - 2 * clamp(2rem, calc(1.43rem + 2.86vw), 4rem))" }}>
           {/* Left side - heading + login */}
           <div className="flex flex-col items-center justify-center">
-            <h2 className="text-center text-[#E8DDD3] mt-12 text-[1.75rem] min-[350px]:text-[3.2rem] min-[500px]:text-[3.5rem] select-none" style={{ fontFamily: "'Times New Roman', Times, serif", fontFeatureSettings: "'liga' 1" }}>
+            <h2 className="text-center text-white mt-12 text-[1.75rem] min-[350px]:text-[3.2rem] min-[500px]:text-[3.5rem] select-none" style={{ fontFamily: "'Times New Roman', Times, serif", fontFeatureSettings: "'liga' 1" }}>
               The AI for
               <br />
               problem solvers

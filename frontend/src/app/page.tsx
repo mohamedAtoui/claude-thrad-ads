@@ -52,33 +52,14 @@ export default function HomePage() {
             className="flex items-center justify-center h-[36px] px-2 rounded-lg transition-colors cursor-pointer no-underline pointer-events-auto"
             style={{ color: 'var(--color-text-secondary)' }}
           >
-            <span className="text-[14px] font-bold tracking-wider">Thrad</span>
+            <img src="/claude-thrad-logo.svg" alt="Thrad" width={56} height={56} />
           </a>
         </div>
 
         <div className="flex flex-col items-center px-4 max-sm:px-3 pt-[12vh] md:pt-[20vh] w-full">
         {/* Hero */}
         <div className="flex items-center gap-3 mb-6">
-          <svg
-            width="36"
-            height="36"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            {[0, 45, 90, 135].map((angle) => (
-              <line
-                key={angle}
-                x1="12"
-                y1="4"
-                x2="12"
-                y2="10"
-                stroke="var(--color-accent-primary)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                transform={`rotate(${angle} 12 12)`}
-              />
-            ))}
-          </svg>
+          <img src="/claude-thrad-logo.svg" alt="Thrad" width={80} height={80} />
           <h1
             className="text-[40px] text-[var(--color-text-primary)]"
             style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 400 }}

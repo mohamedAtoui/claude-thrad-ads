@@ -168,7 +168,7 @@ export default function ChatPage() {
           <a href="https://www.thrad.ai/" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center h-[36px] px-2 rounded-lg transition-colors cursor-pointer no-underline pointer-events-auto"
             style={{ color: 'var(--color-text-secondary)' }}>
-            <span className="text-[14px] font-bold tracking-wider">Thrad</span>
+            <img src="/claude-thrad-logo.svg" alt="Thrad" width={56} height={56} />
           </a>
         </div>
 
