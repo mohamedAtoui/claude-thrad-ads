@@ -29,18 +29,36 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [ads, setAds] = useState<Record<string, AdData>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialSendDone = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Smooth scroll when new messages are added
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingContent]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Instant scroll during streaming, only if user is near bottom
+  useEffect(() => {
+    if (!streamingContent) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+    if (nearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [streamingContent]);
+
+  // Abort stream on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -71,43 +89,69 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, userMsg]);
       setIsStreaming(true);
       setStreamingContent("");
+      setStreamError(null);
+
+      // Accumulate full response in a local variable
+      let fullResponse = "";
+
+      // Create abort controller for this stream
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
       streamChat(
         chatId,
         message,
         (chunk) => {
-          setStreamingContent((prev) => prev + chunk);
+          fullResponse += chunk;
+          setStreamingContent(fullResponse);
         },
         (messageId) => {
-          setStreamingContent((prev) => {
-            const finalContent = prev;
-            const assistantMsg: Message = {
-              id: messageId,
-              role: "assistant",
-              content: finalContent,
-            };
-            setMessages((msgs) => {
-              const updated = [...msgs, assistantMsg];
-              // Fetch ad from backend (server-to-server Thrad call)
-              const allMessages = updated.map((m) => ({ role: m.role, content: m.content }));
-              fetchThradAd(allMessages, chatId).then((ad) => {
-                if (ad && messageId) {
-                  setAds((prev) => ({ ...prev, [messageId]: ad }));
-                }
-              });
-              return updated;
-            });
-            return "";
-          });
+          setStreamingContent("");
           setIsStreaming(false);
-          // Reload chat to get correct message IDs
-          getChat(chatId).then((chat) => setMessages(chat.messages || []));
+          abortControllerRef.current = null;
+
+          // Reload from server as single source of truth
+          getChat(chatId)
+            .then((chat) => {
+              setMessages(chat.messages || []);
+            })
+            .catch(() => {
+              // Fallback: add assistant message locally if reload fails
+              const assistantMsg: Message = {
+                id: messageId,
+                role: "assistant",
+                content: fullResponse,
+              };
+              setMessages((prev) => [...prev, assistantMsg]);
+            })
+            .finally(() => {
+              // Fetch ad after messages settle
+              getChat(chatId)
+                .then((chat) => {
+                  const allMessages = (chat.messages || []).map((m: Message) => ({
+                    role: m.role,
+                    content: m.content,
+                  }));
+                  return fetchThradAd(allMessages, chatId);
+                })
+                .then((ad) => {
+                  if (ad && messageId) {
+                    setAds((prev) => ({ ...prev, [messageId]: ad }));
+                  }
+                })
+                .catch(() => {});
+            });
         },
         (error) => {
+          // Ignore abort errors
+          if (error === "The operation was aborted." || error === "AbortError") return;
           console.error("Stream error:", error);
           setStreamingContent("");
           setIsStreaming(false);
-        }
+          setStreamError(error);
+          abortControllerRef.current = null;
+        },
+        abortController.signal
       );
     },
     [chatId, isStreaming]
@@ -173,8 +217,8 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 flex flex-col items-center px-2 md:px-4 pt-14 pb-0 overflow-y-scroll" style={{ overscrollBehavior: 'contain' }}>
-          <div className="w-full max-w-3xl px-1 md:px-6 flex-1">
+        <div ref={scrollContainerRef} className="flex-1 flex flex-col items-center px-2 md:px-4 pt-14 pb-0 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+          <div className="w-full max-w-3xl px-1 md:px-6 pb-4">
             {messages.map((msg, idx) => (
               <div key={`${msg.id}-${idx}`}>
                 <ChatMessage
@@ -207,6 +251,25 @@ export default function ChatPage() {
             {isStreaming && !streamingContent && (
               <div className="flex justify-start mb-6">
                 <LoadingSpinner />
+              </div>
+            )}
+
+            {/* Stream error */}
+            {streamError && (
+              <div className="flex justify-start mb-6">
+                <div className="rounded-2xl px-4 py-3 max-w-[85%]" style={{ background: 'var(--color-bg-error, #fef2f2)', color: 'var(--color-text-error, #dc2626)' }}>
+                  <p className="text-sm mb-2">Something went wrong: {streamError}</p>
+                  <button
+                    onClick={() => {
+                      setStreamError(null);
+                      handleRetry();
+                    }}
+                    className="text-sm font-medium px-3 py-1 rounded-lg transition-colors"
+                    style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
+                  >
+                    Try again
+                  </button>
+                </div>
               </div>
             )}
 

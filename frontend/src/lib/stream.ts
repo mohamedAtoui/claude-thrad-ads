@@ -15,6 +15,7 @@ export async function streamChat(
   onChunk: (text: string) => void,
   onDone: (messageId: string) => void,
   onError: (error: string) => void,
+  signal?: AbortSignal,
 ) {
   const token = getToken();
 
@@ -26,6 +27,7 @@ export async function streamChat(
         'X-Auth-Token': token,
       },
       body: JSON.stringify({ message }),
+      signal,
     });
 
     if (!res.ok) {
