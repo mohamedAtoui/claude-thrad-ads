@@ -36,6 +36,7 @@ export default function ChatPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initialSendDone = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isStreamingRef = useRef(false);
 
   // Smooth scroll when new messages are added
   useEffect(() => {
@@ -56,10 +57,12 @@ export default function ChatPage() {
     }
   }, [streamingContent]);
 
-  // Abort stream on unmount
+  // Abort stream on unmount (reset refs so strict-mode remount can restart)
   useEffect(() => {
     return () => {
       abortControllerRef.current?.abort();
+      initialSendDone.current = false;
+      isStreamingRef.current = false;
     };
   }, []);
 
@@ -69,22 +72,21 @@ export default function ChatPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load chat messages (skip while streaming — onDone reloads after stream completes)
+  // Load chat messages (skip for fresh chats with ?q= to avoid wiping optimistic message)
   useEffect(() => {
     if (!chatId) return;
     if (searchParams.get("q")) return;
-    if (isStreaming) return;
     getChat(chatId)
       .then((chat) => {
         setMessages(chat.messages || []);
       })
       .catch((err) => console.error("Failed to load chat:", err));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, searchParams]);
 
   const sendMessage = useCallback(
     (message: string) => {
-      if (isStreaming) return;
+      if (isStreamingRef.current) return;
+      isStreamingRef.current = true;
 
       // Add user message to UI immediately
       const userMsg: Message = {
@@ -104,17 +106,28 @@ export default function ChatPage() {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
 
+      // Guard: ignore callbacks from a superseded stream (e.g. after strict-mode remount)
+      const isStale = () => abortControllerRef.current !== abortController;
+
       streamChat(
         chatId,
         message,
         (chunk) => {
+          if (isStale()) return;
           fullResponse += chunk;
           setStreamingContent(fullResponse);
         },
         (messageId) => {
+          if (isStale()) return;
+          isStreamingRef.current = false;
           setStreamingContent("");
           setIsStreaming(false);
           abortControllerRef.current = null;
+
+          // Clean up ?q= from URL if still present
+          if (window.location.search.includes('q=')) {
+            router.replace(`/chat/${chatId}`, { scroll: false });
+          }
 
           // Reload from server as single source of truth
           getChat(chatId)
@@ -149,7 +162,17 @@ export default function ChatPage() {
             });
         },
         (error) => {
+          if (isStale()) return;
+          // Abort errors: reset state silently (no error UI)
+          if (error === 'AbortError') {
+            isStreamingRef.current = false;
+            setStreamingContent("");
+            setIsStreaming(false);
+            abortControllerRef.current = null;
+            return;
+          }
           console.error("Stream error:", error);
+          isStreamingRef.current = false;
           setStreamingContent("");
           setIsStreaming(false);
           setStreamError(error);
@@ -158,7 +181,7 @@ export default function ChatPage() {
         abortController.signal
       );
     },
-    [chatId, isStreaming]
+    [chatId, router]
   );
 
   // Auto-send first message from query param
@@ -168,9 +191,8 @@ export default function ChatPage() {
     if (q && chatId) {
       initialSendDone.current = true;
       sendMessage(q);
-      router.replace(`/chat/${chatId}`, { scroll: false });
     }
-  }, [chatId, searchParams, sendMessage, router]);
+  }, [chatId, searchParams, sendMessage]);
 
   const handleFeedback = async (messageId: string, feedback: "like" | "dislike") => {
     try {
