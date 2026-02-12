@@ -98,18 +98,22 @@ def get_thrad_ad(messages: list, user_id: str, chat_id: str, turn_number: int = 
     }
 
     # Try primary key, then fallback key
+    print(f'[THRAD DEBUG] message_count={len(messages)} turn={turn_number} chat={chat_id}')
+    print(f'[THRAD DEBUG] primary_key_set={bool(settings.THRAD_API_KEY)} fallback_key_set={bool(settings.THRAD_API_KEY_FALLBACK)}')
     for key in [settings.THRAD_API_KEY, settings.THRAD_API_KEY_FALLBACK]:
         if not key:
-            logger.warning('Thrad API key is empty/missing, skipping')
+            print('[THRAD DEBUG] key is empty, skipping')
             continue
         try:
+            print(f'[THRAD DEBUG] calling Thrad API with key …{key[-6:]}')
             bid = _call_thrad_api(key, payload)
             if bid:
+                print(f'[THRAD DEBUG] got bid: {bid}')
                 return bid
-            logger.warning('Thrad API returned no bid for key …%s', key[-6:])
+            print(f'[THRAD DEBUG] no bid returned for key …{key[-6:]}')
         except Exception as e:
-            logger.exception('Thrad API call failed for key …%s: %s', key[-6:], str(e))
+            print(f'[THRAD DEBUG] exception for key …{key[-6:]}: {type(e).__name__}: {e}')
 
     # Both keys failed or returned no bid — return mock ad
-    logger.warning('All Thrad API keys failed; returning mock ad')
+    print('[THRAD DEBUG] all keys failed, returning mock ad')
     return random.choice(MOCK_ADS)
