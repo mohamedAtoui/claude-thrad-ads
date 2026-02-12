@@ -85,6 +85,10 @@ KV_REST_API_TOKEN = os.getenv('KV_REST_API_TOKEN', '')
 # OpenAI
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
+# Brevo (email verification)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
+EMAIL_FROM_ADDRESS = os.getenv('EMAIL_FROM_ADDRESS', '').strip()
+
 # Thrad SSP
 THRAD_API_KEY = os.getenv('THRAD_API_KEY', '').strip()
 THRAD_API_KEY_FALLBACK = os.getenv('THRAD_API_KEY_FALLBACK', '').strip()

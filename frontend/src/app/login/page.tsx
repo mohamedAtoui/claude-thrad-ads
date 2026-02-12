@@ -89,78 +89,145 @@ function GoogleIcon() {
 /* ── LoginBox (from login-page-box/components/login-box.tsx + auth) ── */
 function LoginBox() {
   const [email, setEmail] = useState("")
+  const [code, setCode] = useState("")
+  const [step, setStep] = useState<"email" | "code">("email")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
-  const { login } = useAuth()
+  const { sendCode, verifyCode } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
 
     setLoading(true)
     setError("")
     try {
-      await login(email.trim())
-      router.push(hasSeenOnboarding() ? "/" : "/onboarding")
+      await sendCode(email.trim())
+      setStep("code")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+      setError(err instanceof Error ? err.message : "Failed to send code")
     } finally {
       setLoading(false)
     }
   }
 
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!code.trim()) return
+
+    setLoading(true)
+    setError("")
+    try {
+      await verifyCode(email.trim(), code.trim())
+      router.push(hasSeenOnboarding() ? "/" : "/onboarding")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBackToEmail = () => {
+    setStep("email")
+    setCode("")
+    setError("")
+  }
+
   return (
     <div className="mx-4 sm:mx-auto max-w-md min-w-[20rem]">
       <div className="rounded-[2rem] border border-[#3A3530] p-7 text-center flex flex-col space-y-2">
-        {/* Google button */}
-        <button
-          type="button"
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#3A3530] bg-[#2A2520] px-4 py-3 text-sm font-medium text-[#E8DDD3] transition-colors hover:bg-[#352F29]"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
+        {step === "email" ? (
+          <>
+            {/* Google button */}
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#3A3530] bg-[#2A2520] px-4 py-3 text-sm font-medium text-[#E8DDD3] transition-colors hover:bg-[#352F29]"
+            >
+              <GoogleIcon />
+              Continue with Google
+            </button>
 
-        {/* OR divider */}
-        <div className="flex items-center gap-3 py-4">
-          <div className="h-px flex-1 bg-[#3A3530]" />
-          <span className="text-xs font-medium tracking-wider text-[#7A7067]">OR</span>
-          <div className="h-px flex-1 bg-[#3A3530]" />
-        </div>
+            {/* OR divider */}
+            <div className="flex items-center gap-3 py-4">
+              <div className="h-px flex-1 bg-[#3A3530]" />
+              <span className="text-xs font-medium tracking-wider text-[#7A7067]">OR</span>
+              <div className="h-px flex-1 bg-[#3A3530]" />
+            </div>
 
-        {/* Email input */}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-[#3A3530] bg-[#221E1A] px-4 py-3 text-sm text-[#E8DDD3] placeholder-[#6A6058] outline-none transition-colors focus:border-[#D97757]"
-            required
-          />
+            {/* Email input */}
+            <form onSubmit={handleSendCode}>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-[#3A3530] bg-[#221E1A] px-4 py-3 text-sm text-[#E8DDD3] placeholder-[#6A6058] outline-none transition-colors focus:border-[#D97757]"
+                required
+              />
 
-          {/* Continue with email button */}
-          <button
-            type="submit"
-            disabled={loading || !email.trim()}
-            className="mt-3 w-full rounded-lg bg-[#E8DDD3] px-4 py-3 text-sm font-medium text-[#1A1714] transition-colors hover:bg-[#D5C9BD] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Logging in..." : "Continue with email"}
-          </button>
-          {error && (
-            <p className="text-red-400 text-xs mt-2 text-center">{error}</p>
-          )}
-        </form>
+              <button
+                type="submit"
+                disabled={loading || !email.trim()}
+                className="mt-3 w-full rounded-lg bg-[#E8DDD3] px-4 py-3 text-sm font-medium text-[#1A1714] transition-colors hover:bg-[#D5C9BD] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Sending code..." : "Continue with email"}
+              </button>
+              {error && (
+                <p className="text-red-400 text-xs mt-2 text-center">{error}</p>
+              )}
+            </form>
 
-        {/* Privacy policy */}
-        <p className="mt-4 text-center text-xs text-[#7A7067]">
-          {"By continuing, you acknowledge Anthropic's "}
-          <a href="#" className="underline hover:text-[#B8ADA2]">
-            Privacy Policy
-          </a>
-          .
-        </p>
+            {/* Privacy policy */}
+            <p className="mt-4 text-center text-xs text-[#7A7067]">
+              {"By continuing, you acknowledge Anthropic's "}
+              <a href="#" className="underline hover:text-[#B8ADA2]">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Code verification step */}
+            <p className="text-sm text-[#B8ADA2]">
+              We sent a code to{" "}
+              <span className="font-medium text-[#E8DDD3]">{email}</span>
+            </p>
+
+            <form onSubmit={handleVerifyCode} className="mt-4">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                className="w-full rounded-lg border border-[#3A3530] bg-[#221E1A] px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono text-[#E8DDD3] placeholder-[#6A6058] outline-none transition-colors focus:border-[#D97757]"
+                autoFocus
+              />
+
+              <button
+                type="submit"
+                disabled={loading || code.length !== 6}
+                className="mt-3 w-full rounded-lg bg-[#E8DDD3] px-4 py-3 text-sm font-medium text-[#1A1714] transition-colors hover:bg-[#D5C9BD] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Verifying..." : "Verify code"}
+              </button>
+              {error && (
+                <p className="text-red-400 text-xs mt-2 text-center">{error}</p>
+              )}
+            </form>
+
+            <button
+              type="button"
+              onClick={handleBackToEmail}
+              className="mt-2 text-xs text-[#D97757] hover:text-[#E8886A] transition-colors"
+            >
+              Use a different email
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

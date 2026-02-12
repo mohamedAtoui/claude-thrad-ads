@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getAuthToken, getAuthEmail, clearAuth } from "@/lib/auth";
-import { login as apiLogin } from "@/lib/api";
+import { sendCode as apiSendCode, verifyCode as apiVerifyCode } from "@/lib/api";
 
 interface AuthContextType {
   email: string;
   token: string;
   isAuthenticated: boolean;
-  login: (email: string) => Promise<void>;
+  sendCode: (email: string) => Promise<void>;
+  verifyCode: (email: string, code: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -16,7 +17,8 @@ const AuthContext = createContext<AuthContextType>({
   email: "",
   token: "",
   isAuthenticated: false,
-  login: async () => {},
+  sendCode: async () => {},
+  verifyCode: async () => {},
   logout: () => {},
 });
 
@@ -29,8 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(getAuthToken());
   }, []);
 
-  const login = useCallback(async (inputEmail: string) => {
-    const data = await apiLogin(inputEmail);
+  const sendCode = useCallback(async (inputEmail: string) => {
+    await apiSendCode(inputEmail);
+  }, []);
+
+  const verifyCode = useCallback(async (inputEmail: string, code: string) => {
+    const data = await apiVerifyCode(inputEmail, code);
     setEmail(data.email);
     setToken(data.token);
   }, []);
@@ -47,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         token,
         isAuthenticated: !!token,
-        login,
+        sendCode,
+        verifyCode,
         logout,
       }}
     >

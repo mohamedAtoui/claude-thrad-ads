@@ -25,12 +25,19 @@ async function apiFetch(path: string, options: RequestInit = {}) {
   return res.json();
 }
 
-export async function login(email: string) {
-  const data = await apiFetch('/auth/login/', {
+export async function sendCode(email: string) {
+  return apiFetch('/auth/send-code/', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
-  // Set cookie
+}
+
+export async function verifyCode(email: string, code: string) {
+  const data = await apiFetch('/auth/verify-code/', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+  // Set cookies
   document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 30}`;
   document.cookie = `auth_email=${data.email}; path=/; max-age=${60 * 60 * 24 * 30}`;
   return data;

@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .services import storage, user_profile
+from .services import storage, user_profile, email as email_service
 from .services.ads import get_thrad_ad
 from .services.claude import stream_response
 from .prompts import build_system_prompt
@@ -26,11 +26,33 @@ def _json_body(request):
 
 @csrf_exempt
 @require_http_methods(['POST'])
-def login(request):
+def send_code(request):
     body = _json_body(request)
     email = body.get('email', '').strip().lower()
     if not email:
         return JsonResponse({'error': 'Email is required'}, status=400)
+
+    code = storage.create_verification_code(email)
+    try:
+        email_service.send_verification_code(email, code)
+    except Exception:
+        storage.delete_verification_code(email)
+        return JsonResponse({'error': 'Failed to send verification email'}, status=500)
+
+    return JsonResponse({'message': 'Verification code sent', 'email': email})
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def verify_code(request):
+    body = _json_body(request)
+    email = body.get('email', '').strip().lower()
+    code = body.get('code', '').strip()
+    if not email or not code:
+        return JsonResponse({'error': 'Email and code are required'}, status=400)
+
+    if not storage.verify_code(email, code):
+        return JsonResponse({'error': 'Invalid or expired code'}, status=400)
 
     user = storage.get_user(email)
     if not user:

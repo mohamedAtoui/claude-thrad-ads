@@ -1,4 +1,5 @@
 import json
+import random
 import uuid
 import hashlib
 from datetime import datetime, timezone
@@ -31,6 +32,57 @@ def _redis_get(key: str) -> dict | None:
 def _redis_set(key: str, data: dict):
     r = _get_redis()
     r.set(key, json.dumps(data, default=str))
+
+
+# ── Verification code operations ──
+
+VERIFY_TTL = 600  # 10 minutes
+MAX_ATTEMPTS = 5
+
+
+def create_verification_code(email: str) -> str:
+    """Generate a 6-digit code, store in Redis with 10-min TTL."""
+    code = f'{random.randint(0, 999999):06d}'
+    eh = _email_hash(email)
+    r = _get_redis()
+    r.set(f'verify:{eh}', json.dumps({'code': code, 'attempts': 0}), ex=VERIFY_TTL)
+    return code
+
+
+def verify_code(email: str, code: str) -> bool:
+    """Check code, delete on success, track failed attempts (max 5)."""
+    eh = _email_hash(email)
+    r = _get_redis()
+    key = f'verify:{eh}'
+    data = r.get(key)
+    if data is None:
+        return False
+    if isinstance(data, str):
+        data = json.loads(data)
+
+    if data.get('attempts', 0) >= MAX_ATTEMPTS:
+        r.delete(key)
+        return False
+
+    if data['code'] == code.strip():
+        r.delete(key)
+        return True
+
+    # Wrong code — increment attempts
+    data['attempts'] = data.get('attempts', 0) + 1
+    ttl = r.ttl(key)
+    if ttl and ttl > 0:
+        r.set(key, json.dumps(data), ex=ttl)
+    else:
+        r.delete(key)
+    return False
+
+
+def delete_verification_code(email: str):
+    """Clean up verification code (e.g. on email send failure)."""
+    eh = _email_hash(email)
+    r = _get_redis()
+    r.delete(f'verify:{eh}')
 
 
 # ── User operations ──
