@@ -54,7 +54,7 @@ def _call_thrad_api(api_key: str, payload: dict) -> dict | None:
         'https://ssp.thrads.ai/api/v1/ssp/bid-request',
         headers=headers,
         json=payload,
-        timeout=6,
+        timeout=10,
     )
     logger.info('Thrad API [key=…%s] status=%s body=%s', api_key[-6:], resp.status_code, resp.text[:500])
     resp.raise_for_status()
@@ -100,13 +100,15 @@ def get_thrad_ad(messages: list, user_id: str, chat_id: str, turn_number: int = 
     # Try primary key, then fallback key
     for key in [settings.THRAD_API_KEY, settings.THRAD_API_KEY_FALLBACK]:
         if not key:
+            logger.warning('Thrad API key is empty/missing, skipping')
             continue
         try:
             bid = _call_thrad_api(key, payload)
             if bid:
                 return bid
-        except Exception:
-            logger.exception('Thrad API call failed for key …%s', key[-6:])
+            logger.warning('Thrad API returned no bid for key …%s', key[-6:])
+        except Exception as e:
+            logger.exception('Thrad API call failed for key …%s: %s', key[-6:], str(e))
 
     # Both keys failed or returned no bid — return mock ad
     logger.warning('All Thrad API keys failed; returning mock ad')
