@@ -86,6 +86,6 @@ KV_REST_API_TOKEN = os.getenv('KV_REST_API_TOKEN', '')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 
 # Thrad SSP
-THRAD_API_KEY = os.getenv('THRAD_API_KEY', '')
-THRAD_API_KEY_FALLBACK = os.getenv('THRAD_API_KEY_FALLBACK', '')
+THRAD_API_KEY = os.getenv('THRAD_API_KEY', '').strip()
+THRAD_API_KEY_FALLBACK = os.getenv('THRAD_API_KEY_FALLBACK', '').strip()
 THRAD_CHATBOT_URL = os.getenv('THRAD_CHATBOT_URL', '')
