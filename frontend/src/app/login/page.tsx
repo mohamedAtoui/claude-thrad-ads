@@ -129,6 +129,18 @@ function LoginBox() {
     }
   }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
+    if (!pasted) return
+    const newDigits = [...digits]
+    for (let i = 0; i < 6; i++) {
+      newDigits[i] = pasted[i] || ""
+    }
+    setDigits(newDigits)
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus()
+  }
+
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
@@ -240,6 +252,7 @@ function LoginBox() {
                     value={digit}
                     onChange={(e) => handleDigitChange(i, e.target.value)}
                     onKeyDown={(e) => handleDigitKeyDown(i, e)}
+                    onPaste={handlePaste}
                     autoFocus={i === 0}
                     className="h-12 w-10 rounded-lg border border-[#3A3530] bg-[#221E1A] text-center text-xl font-mono text-[#E8DDD3] outline-none transition-colors focus:border-[#D97757]"
                   />
