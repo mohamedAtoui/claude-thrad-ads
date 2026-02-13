@@ -38,11 +38,11 @@ function CuriousIcon() {
   );
 }
 
-function AdFreeIcon() {
+function AdSupportedIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8DDD3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      <path d="m3 11 18-5v12L3 13v-2z" />
+      <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
     </svg>
   );
 }
@@ -107,16 +107,16 @@ export default function OnboardingPage() {
           className="text-[28px] text-[#E8DDD3] mb-4"
           style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 400 }}
         >
-          Hey there, I&apos;m Claude.
+          Hey, I&apos;m Claude. Thrad pays my bills.
         </h1>
 
         {/* Subtitle */}
         <p className="text-[#B8ADA2] text-[15px] leading-relaxed mb-2">
-          I&apos;m your AI assistant for working, imagining, and deep thinking.
+          I&apos;m the same brilliant AI you know and love — except here, Thrad sponsors me so you don&apos;t have to.
         </p>
 
         <p className="text-[#B8ADA2] text-[15px] leading-relaxed mb-6">
-          Here&apos;s a few things you should know about me:
+          A few things before we start:
         </p>
 
         {/* Feature items */}
@@ -131,41 +131,37 @@ export default function OnboardingPage() {
                 Curious? Just ask
               </p>
               <p className="text-[#8A8078] text-[13px] leading-relaxed">
-                Chat with me about anything from simple asks to complex ideas! Guardrails keep our chat safe.
+                I can help with anything — writing, coding, brainstorming, you name it. Same Claude brain, zero subscription fee.
               </p>
             </div>
           </div>
 
-          {/* Ad-free chats */}
+          {/* Ads? Yeah, but tasteful ones */}
           <div className="flex gap-4">
             <div className="flex-shrink-0 mt-0.5">
-              <AdFreeIcon />
+              <AdSupportedIcon />
             </div>
             <div>
               <p className="text-[#E8DDD3] text-[14px] font-semibold mb-0.5">
-                Ad-free chats
+                Ads? Yeah, but tasteful ones
               </p>
               <p className="text-[#8A8078] text-[13px] leading-relaxed">
-                I won&apos;t show you ads. My focus is being genuinely helpful to you.
+                Thrad shows you a relevant ad here and there — that&apos;s the deal. They pay Anthropic, you get me for free. Everybody wins. Mostly Thrad.
               </p>
             </div>
           </div>
 
-          {/* You can improve Claude for everyone */}
+          {/* Your chats, your rules */}
           <div className="flex gap-4">
             <div className="flex-shrink-0 mt-0.5">
               <ImproveIcon />
             </div>
             <div>
               <p className="text-[#E8DDD3] text-[14px] font-semibold mb-0.5">
-                You can improve Claude for everyone
+                Your chats, your rules
               </p>
               <p className="text-[#8A8078] text-[13px] leading-relaxed">
-                We use your chats and coding sessions to train and improve Claude. You can change this setting anytime in your{" "}
-                <a href="#" className="underline hover:text-[#B8ADA2]">
-                  Privacy Settings
-                </a>
-                .
+                Your conversations stay between us. We don&apos;t use them to train models unless you say so.
               </p>
 
               {/* Help Improve Claude toggle */}
@@ -182,7 +178,7 @@ export default function OnboardingPage() {
           onClick={handleUnderstand}
           className="self-start rounded-full border border-[#4A4039] bg-transparent px-6 py-2.5 text-[14px] font-medium text-[#E8DDD3] transition-colors hover:bg-[#2A2520]"
         >
-          I understand
+          Sounds like a deal
         </button>
       </div>
     </div>

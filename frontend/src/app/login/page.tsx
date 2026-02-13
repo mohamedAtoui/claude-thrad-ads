@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { hasSeenOnboarding } from "@/lib/auth"
@@ -89,12 +89,45 @@ function GoogleIcon() {
 /* ── LoginBox (from login-page-box/components/login-box.tsx + auth) ── */
 function LoginBox() {
   const [email, setEmail] = useState("")
-  const [code, setCode] = useState("")
+  const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""])
   const [step, setStep] = useState<"email" | "code">("email")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
   const { sendCode, verifyCode } = useAuth()
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const code = digits.join("")
+
+  const handleDigitChange = (index: number, value: string) => {
+    // Handle pasting a full code
+    if (value.length > 1) {
+      const pasted = value.replace(/\D/g, "").slice(0, 6)
+      const newDigits = [...digits]
+      for (let i = 0; i < 6; i++) {
+        newDigits[i] = pasted[i] || ""
+      }
+      setDigits(newDigits)
+      const focusIdx = Math.min(pasted.length, 5)
+      inputRefs.current[focusIdx]?.focus()
+      return
+    }
+
+    const digit = value.replace(/\D/g, "")
+    const newDigits = [...digits]
+    newDigits[index] = digit
+    setDigits(newDigits)
+
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleDigitKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,7 +163,7 @@ function LoginBox() {
 
   const handleBackToEmail = () => {
     setStep("email")
-    setCode("")
+    setDigits(["", "", "", "", "", ""])
     setError("")
   }
 
@@ -196,16 +229,22 @@ function LoginBox() {
             </p>
 
             <form onSubmit={handleVerifyCode} className="mt-4">
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="000000"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="w-full rounded-lg border border-[#3A3530] bg-[#221E1A] px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono text-[#E8DDD3] placeholder-[#6A6058] outline-none transition-colors focus:border-[#D97757]"
-                autoFocus
-              />
+              <div className="flex justify-center gap-2">
+                {digits.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { inputRefs.current[i] = el }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleDigitChange(i, e.target.value)}
+                    onKeyDown={(e) => handleDigitKeyDown(i, e)}
+                    autoFocus={i === 0}
+                    className="h-12 w-10 rounded-lg border border-[#3A3530] bg-[#221E1A] text-center text-xl font-mono text-[#E8DDD3] outline-none transition-colors focus:border-[#D97757]"
+                  />
+                ))}
+              </div>
 
               <button
                 type="submit"
